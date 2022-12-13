@@ -1,0 +1,227 @@
+﻿@page "/space/{spaceid:int}/{selectedboard?}"
+@using Microsoft.AspNetCore.Identity;
+@using TaskTimeTrackerIdentity.Dal.Enum;
+@using TaskTimeTrackerIdentity.Dal.Model.Identity;
+@using MyTask = TaskTimeTrackerIdentity.Dal.Model.Task;
+@attribute [Authorize]
+
+
+<div class="row my-2">
+    <div class="col-md-4 col-12 d-flex justify-content-end">
+        <button class="btn btn-secondary btn-lg" @onclick="@(() => CreateNewTaskClick("Portfolio"))">+ Portfolio</button>
+    </div>
+    <div class="col-md-8 col-12 d-flex justify-content-end">
+        <button class="btn btn-secondary btn-lg" @onclick="@(() => CreateNewTaskClick("Task"))">+ Task</button>
+    </div>
+</div>
+
+
+@{
+    // Render Portfolio
+    @if (MyTasks != null && MyTasks.Count != 0)
+    {
+        @foreach (MyTask task in MyTasks)
+        {
+            @if (task.TaskType.Equals("Portfolio"))
+            {
+                <div class="row mb-2">
+                    <div class="col-md-4 col-12">
+                        <div class="card border-primary">
+                            <div class="card-header">Portfolio@("00000" + (task.Id).ToString())</div>
+                            <div class="card-body text-primary">
+                                <h5 class="card-title">@task.Title</h5>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="text-success">Progress 0 %</div>
+                                    <button type="button" class="btn btn-primary"
+                                            @onclick="@(() => EditTaskClick(task.Id))">
+                                        View
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (task.InverseParentTask != null && task.InverseParentTask.Count != 0)
+                    {
+                        <div class="col-md-8 col-12">
+                            @foreach (MyTask taskRelated in task.InverseParentTask)
+                            {
+                                <div class="card border-success mb-2">
+                                    <div class="card-header">Task@("00000" + (taskRelated.Id).ToString())</div>
+                                    <div class="card-body text-success d-flex align-items-center">
+                                        <h5 class="card-title border border-success p-2 flex-grow-1">@taskRelated.Title</h5>
+                                        <div class="mx-4">Status</div>
+                                        <button type="button" class="btn btn-primary"
+                                                @onclick="@(() => EditTaskClick(taskRelated.Id))">
+                                            View
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    <hr class="my-2" />
+                </div>
+            }
+        }
+
+        // Render Task
+        @foreach (MyTask task in MyTasks)
+        {
+            @if (task.TaskType.Equals("Task") && task.ParentTaskId == null)
+            {
+                <div class="row mb-2 justify-content-end">
+                    <div class="col-md-8 col-12">
+                        <div class="card border-success mb-2">
+                            <div class="card-header">Task@("00000" + (task.Id).ToString())</div>
+                            <div class="card-body text-success d-flex align-items-center">
+                                <h5 class="card-title border border-success p-2 flex-grow-1">@task.Title</h5>
+                                <div class="mx-4">Status</div>
+                                <button type="button" class="btn btn-primary"
+                                        @onclick="@(() => EditTaskClick(task.Id))">
+                                    View
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        }
+    }
+}
+
+
+
+<ModalForm @ref="modalForm"
+           Id="createNewTask"
+           FormType="formType"
+           onConfirmAdd="ConfirmAddTask"
+           onConfirmSave="ConfirmSaveTask"
+           onCancel="CancelTaskClick"
+           Title="@formTitle">
+    <fieldset>
+
+        <div class="row">
+            <div class="col mb-2">
+                <label for="taskTitle">Title</label>
+                <input type="text" maxlength="50" id="taskTitle" class="form-control" @bind="Task.Title" />
+            </div>
+        </div>
+
+        <div class="col mb-2">
+            <label for="selectPosition">Type</label>
+            <select class="form-select"
+                    id="selectPosition"
+                    @bind="Task.TaskType">
+                @foreach (string type in taskTypes)
+                {
+                    <option value="@type" selected="@(taskType == type)">@type</option>
+                }
+            </select>
+        </div>
+
+        <div class="col mb-2">
+            <label for="desc">Description</label>
+            <textarea id="desc" class="form-control" @bind="Task.Description"></textarea>
+        </div>
+
+        @{ // View & Edit mode
+            @if (formType == ModalFormType.Edit)
+            {
+                // Add select for Portfolio related tasks
+                @if (MyTasksNoParent != null && MyTasksNoParent.Count != 0 && Task.TaskType == "Portfolio")
+                {
+                    <div class="col mb-2">
+                        <select class="form-select"
+                                id="selectRelated"
+                                @onchange="OnSelectRelatedTasks">
+                            <option value="-1" selected>Add related tasks</option>
+                            @foreach (MyTask task in MyTasksNoParent)
+                            {
+                                <option value="@task.Id">@task.Title</option>
+                            }
+                        </select>
+                    </div>
+                }
+                // Add related tasks in Portfolio when select before save
+                @if (RelatedTasks != null && RelatedTasks.Count != 0 && Task.TaskType == "Portfolio")
+                {
+                    <div class="col">
+                        @foreach (MyTask task in RelatedTasks)
+                        {
+                            <div class="border border-success d-flex flex-row align-items-center p-2 mb-2">
+                                <div>Task@("00000" + (task.Id).ToString())</div>
+                                <h5 class="text-success flex-grow-1 mb-0 mx-2">@task.Title</h5>
+                                <div>Status</div>
+                            </div>
+                        }
+                    </div>
+                }
+                // Add related tasks in Portfolio which was saved
+                @if (Task.InverseParentTask != null && Task.InverseParentTask.Count != 0)
+                {
+                    <div class="col mb-2">
+                        @foreach (MyTask task in Task.InverseParentTask)
+                        {
+                            <div class="border border-success d-flex flex-row align-items-center p-2 mb-2">
+                                <div>Task@("00000" + (task.Id).ToString())</div>
+                                <h5 class="text-success flex-grow-1 mb-0 mx-2">@task.Title</h5>
+                                <div>Status</div>
+                            </div>
+                        }
+                    </div>
+                }
+                // Add parent task in Task which was saved
+                @if (Task.ParentTaskId != null && Task.ParentTaskId != 0)
+                {
+                    <div class="col mb-2">
+                        <div class="border border-primary d-flex flex-row align-items-center p-2">
+                            <div>Portfolio@("00000" + (Task.Id).ToString())</div>
+                            <h5 class="text-primary flex-grow-1 mb-0 mx-2">@Task.Title</h5>
+                        </div>
+                    </div>
+                }
+
+                @if (Task.TaskType != null && Task.TaskType == "Task")
+                {
+                    <div class="col mb-2">
+                        <label for="assignee">Assignee</label>
+                        <div class="d-flex flex-row align-items-center">
+                            <div>
+                                @if (UsersByCurrentSpace != null && UsersByCurrentSpace.Count != 0)
+                                {
+                                    <select class="form-select"
+                                            id="selectAssignee"
+                                            @onchange="OnSelectTaskAssignee">
+                                        <option value="-1" selected="@(Task.AssigneeId == null)">Add assignee</option>
+                                        @foreach (AppUser user in UsersByCurrentSpace)
+                                        {
+                                            <option value="@user.Id" selected="@(Task.AssigneeId != null)">
+                                                @(user.FirstName + " " + user.LastName)
+                                            </option>
+                                        }
+                                    </select>
+                                }
+
+                            </div>
+                            <h5 class="text-center text-primary flex-grow-1">Status</h5>
+                            <button type="button" class="btn btn-primary">
+                                Start
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+
+        }
+
+    </fieldset>
+</ModalForm>
+
+@code {
+
+    public List<string> taskTypes = new() { "Portfolio", "Task", "Goal" };
+}
+

@@ -1,0 +1,50 @@
+﻿@page "/boards"
+@*@page "/players/list"*@
+
+<div class="row">
+    <div class="col-lg-9">
+        <h1>Boards</h1>
+    </div>
+    <div class="col-lg-3 text-right">
+        <a class="btn btn-success btn-sm" href="/task/create" role="button">Create New</a>
+    </div>
+</div>
+
+@if (Boards != null && Boards.Count > 0)
+{
+    <table class="table table-bordered table-striped table-sm">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>GroupId</th>
+                <th>AccessType</th>
+                <th>BoardAdminId</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Boards)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.SpaceId</td>
+                    <td>@item.AccessType</td>
+                    <td>@item.BoardAdminId</td>
+                    <td class="text-right">
+                        <a class="btn btn-primary btn-sm" href="/boards/detail/@item.Id" role="button">Details</a>
+                        <a class="btn btn-secondary btn-sm" href="/boards/edit/@item.Id" role="button">Edit</a>
+                        @*<button class="btn btn-danger btn-sm" @onclick="@(e => DeleteBoard(item.Id))" role="button">Delete</button>*@
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+
+}
+

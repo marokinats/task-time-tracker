@@ -1,0 +1,28 @@
+﻿@using TaskTimeTrackerIdentity.Dal.Model;
+@using TaskTimeTrackerIdentity.Web.Services.Interfaces;
+@using Task = System.Threading.Tasks.Task;
+
+@{
+    if (AppState.CurrentBoardsList != null && AppState.CurrentBoardsList?.Count > 0)
+    {
+        <li class="nav-item dropdown">
+            <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fa-solid fa-plus"></i>
+                <span>@AppState.CurrentBoardName</span>
+            </button>
+
+            <div class="dropdown-menu">
+                @{
+                    foreach (Board board in AppState.CurrentBoardsList)
+                    {
+                        <button class="dropdown-item" @onclick="() => SelectBoard(board)">@board.Name</button>
+                    }
+                }
+            </div>
+        </li>
+     }
+}
+
+@code {
+}
+

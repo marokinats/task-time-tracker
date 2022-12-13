@@ -1,0 +1,33 @@
+﻿@page "/space/join"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Identity;
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-9">
+            <h1>Join to existing Space</h1>
+        </div>
+        <div class="col-lg-3 text-right">
+            <a class="btn btn-primary btn-sm" href="/" role="button">Go Back</a>
+        </div>
+    </div>
+
+    <fieldset>
+        <EditForm Model="@JoinSpaceRequest" OnValidSubmit="@SubmitJoinSpaceRequest">
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-8 col-lg-4">
+                    <label for="joinname">Space name to join</label>
+                    <InputText id="joinname" required class="form-control" @bind-Value="JoinSpaceName" />
+                    <button type="submit" class="btn btn-primary mt-4">Send request</button>
+                </div>
+            </div>
+            
+        </EditForm>
+    </fieldset>
+</div>
+
+
+@code {
+
+}
+

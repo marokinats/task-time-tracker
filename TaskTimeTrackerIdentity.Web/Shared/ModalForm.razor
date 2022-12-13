@@ -1,0 +1,161 @@
+﻿@inject IJSRuntime JSRuntime
+@using TaskTimeTrackerIdentity.Web.Shared.Enum;
+
+<div class="modal fade" id="@Id" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered @modalSizeClass">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">@Title</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <!-- Modal body -->
+            <div class="modal-body">
+                @ChildContent
+            </div>
+
+            <!-- Modal footer -->
+            <div class="modal-footer">
+                
+                <button type="button" class="btn btn-primary" @onclick="Confirmed">@buttonText</button>
+                
+                <button type="button" class="btn btn-danger" @onclick="CancelClick">Cancel</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    private string modalSizeClass = "";
+    private string buttonText = "Add";
+
+
+    [Parameter]
+    public string Id { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public EventCallback onConfirmSave { get; set; }
+
+    [Parameter]
+    public EventCallback onConfirmAdd { get; set; }
+
+    [Parameter]
+    public EventCallback onConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback onCancel { get; set; }
+
+    [Parameter]
+    public ModalFormType FormType
+    {
+        get
+        {
+            switch (buttonText)
+            {
+                case "Add":
+                    return ModalFormType.Add;
+                case "Save":
+                    return ModalFormType.Edit;
+                default:
+                    return ModalFormType.Add;
+            }
+        }
+        set
+        {
+            switch (value)
+            {
+                case ModalFormType.Add:
+                    buttonText = "Add";
+                    break;
+                case ModalFormType.Edit:
+                    buttonText = "Save";
+                    break;
+            }
+        }
+    }
+
+    [Parameter]
+    public CustomModalSize Size
+    {
+        get
+        {
+            switch (modalSizeClass)
+            {
+                case "modal-sm":
+                    return CustomModalSize.Small;
+                case "":
+                    return CustomModalSize.Default;
+                case "modal-lg":
+                    return CustomModalSize.Large;
+                case "modal-xl":
+                    return CustomModalSize.ExtraLarge;
+                default:
+                    return CustomModalSize.Default;
+            }
+        }
+        set
+        {
+            switch (value)
+            {
+                case CustomModalSize.Small:
+                    modalSizeClass = "modal-sm";
+                    break;
+                case CustomModalSize.Default:
+                    modalSizeClass = "";
+                    break;
+                case CustomModalSize.Large:
+                    modalSizeClass = "modal-lg";
+                    break;
+                case CustomModalSize.ExtraLarge:
+                    modalSizeClass = "modal-xl";
+                    break;
+            }
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(Id))
+        {
+            throw new Exception("Id is a mandatory parameter.");
+        }
+    }
+
+
+    private async Task CancelClick()
+    {
+        @*await Hide();*@
+        await onCancel.InvokeAsync(null);
+    }
+
+    public async Task Show()
+    {
+        await JSRuntime.InvokeVoidAsync("showModal", Id);
+    }
+
+    public async Task Hide()
+    {
+        await JSRuntime.InvokeVoidAsync("hideModal", Id);
+    }
+
+    private async Task Confirmed()
+    {
+        if (FormType == ModalFormType.Add)
+        {
+            await onConfirmAdd.InvokeAsync(null);
+        }
+        else if (FormType == ModalFormType.Edit)
+        {
+            await onConfirmSave.InvokeAsync(null);
+        }
+    }
+}

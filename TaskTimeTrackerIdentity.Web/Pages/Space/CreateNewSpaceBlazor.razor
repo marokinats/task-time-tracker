@@ -1,0 +1,33 @@
+﻿@page "/space/create"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Identity;
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-9">
+            <h1>Create new Space</h1>
+        </div>
+        <div class="col-lg-3 text-right">
+            <a class="btn btn-primary btn-sm" href="/" role="button">Go Back</a>
+        </div>
+    </div>
+
+    <fieldset>
+        <EditForm Model="@Space" OnValidSubmit="@SubmitSpace">
+            <div class="row justify-content-center mt-4">
+                <div class="col-md-8 col-lg-4">
+                    <label for="name">Space name</label>
+                    <InputText id="name" class="form-control" @bind-Value="Space.Name" />
+                    <button type="submit" class="btn btn-primary mt-4">Create</button>
+                </div>
+            </div>
+            
+        </EditForm>
+    </fieldset>
+</div>
+
+
+@code {
+
+}
+
